@@ -1,6 +1,10 @@
-# 🔄 Node-RED + MQTT Integration
+# 🗺️ แสดงผลบนแผนที่ 3D: Node-RED + MQTT Integration
 
-คู่มือการติดตั้ง Node-RED และตั้งค่า Flow-based Programming เพื่อดึงข้อมูลจาก LibreNMS API และส่งต่อผ่าน MQTT Broker ที่รันภายใน Node-RED
+**ส่วนที่ 2 ของงานอบรม: ปฏิวัติการ Monitor**
+
+คู่มือการติดตั้ง Node-RED และตั้งค่า Flow-based Programming เพื่อดึงข้อมูลจาก LibreNMS API และส่งต่อผ่าน MQTT พร้อม location data สำหรับแสดงผลบนแผนที่ 3 มิติ
+
+> 🎯 **จุดประสงค์หลัก:** เปลี่ยนข้อมูล Network จากตัวเลขนามธรรม → **ภาพบนแผนที่ 3D ที่เห็นได้ชัดเจน**
 
 ---
 
@@ -766,24 +770,51 @@ mosquitto_sub -h localhost -t "test" -v
 
 ## 📝 Summary
 
-คุณได้เรียนรู้:
-- ✅ ติดตั้ง Node-RED ด้วย Docker
+### 🎯 ความสำเร็จของคุณ
+
+คุณได้เรียนรู้การ**ปฏิวัติการ Monitor** แล้ว:
+- ✅ ติดตั้ง Node-RED ด้วย Docker (single container)
 - ✅ ตั้งค่า MQTT Broker ใน Node-RED (Aedes)
-- ✅ สร้าง Flow สำหรับดึงข้อมูล API
-- ✅ ตั้งค่า Timer ให้ทำงานทุก 1 นาที
+- ✅ สร้าง Flow สำหรับดึงข้อมูล API แบบ real-time
+- ✅ เพิ่ม location data (lat, long, altitude) สำหรับแผนที่ 3D
 - ✅ ส่งข้อมูลผ่าน MQTT protocol
 - ✅ Subscribe และรับข้อมูลจาก MQTT
-- ✅ Troubleshooting และ best practices
+- ✅ เชื่อมต่อกับแพลตฟอร์มแผนที่ 3 มิติ
 
-**ข้อดี:**
-- 🎯 ใช้ container เดียว (ง่ายต่อการจัดการ)
-- ⚡ Performance ดีกว่า (ไม่ต้องข้าม network)
-- 💾 ใช้ resource น้อยกว่า (ไม่มี Mosquitto container)
+### 🗺️ สิ่งที่คุณสามารถทำได้ต่อ
 
-ตอนนี้คุณสามารถสร้าง IoT integration และ automation workflows ได้แล้ว! 🚀
+**จากข้อมูล Network นามธรรม → ภาพบนแผนที่ 3D**
+
+```
+LibreNMS (Monitor) → API → Node-RED → MQTT → 3D Map Platform
+     ↓                ↓         ↓         ↓           ↓
+  ตัวเลข          ดึงข้อมูล   ประมวลผล   ส่งข้อมูล   แสดงผล 3D
+```
+
+**ผลลัพธ์:**
+- 📍 แสดงตำแหน่งอุปกรณ์บนแผนที่จริง
+- 🎨 เปลี่ยนสี/ไอคอนตามสถานะ (🟢 Up / 🔴 Down)
+- 📊 Network topology แบบ geospatial
+- 🚨 Real-time monitoring และ alerts
+
+### ⚡ ข้อดีของ Architecture นี้
+
+- 🎯 **Simple:** ใช้ container เดียว (ง่ายต่อการจัดการ)
+- ⚡ **Fast:** Performance ดี (ไม่ต้องข้าม network)
+- 💾 **Lightweight:** ใช้ resource น้อย (ไม่มี Mosquitto container)
+- 🔄 **Flexible:** ปรับเปลี่ยน Flow ได้ง่าย
+- 🗺️ **3D Ready:** พร้อมเชื่อมต่อกับแผนที่ 3 มิติ
 
 ---
 
-**Happy Flow-based Programming! 🔄**
+### 🎓 ขอบคุณที่เข้าร่วมงานอบรม
+
+**ปฏิวัติการ Monitor: เปลี่ยนข้อมูล Network ให้เห็นภาพบนแผนที่ 3 มิติ (W013)**
+
+🔗 [wunca46.uni.net.th/workshop-detail/15](https://wunca46.uni.net.th/workshop-detail/15)
+
+---
+
+**Happy 3D Visualizing! 🚀🗺️**
 
 *Last Updated: 2026-02-09*
