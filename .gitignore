@@ -27,3 +27,7 @@ Thumbs.db
 !.gitignore
 !README.md
 !LICENSE
+
+# Allow documentation และ configuration ใน librenms/
+!librenms/librenms.md
+!librenms/docker-compose.yml
