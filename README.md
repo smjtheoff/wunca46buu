@@ -32,7 +32,8 @@
 - **Lab 1:** 15-20 นาที (Setup LibreNMS)
 - **Lab 2:** 20-30 นาที (Setup MikroTik)
 - **Lab 3:** 10-15 นาที (Integration & Monitoring)
-- **รวม:** ~45-65 นาที
+- **Lab 4:** 15-20 นาที (API Integration - Optional)
+- **รวม:** ~45-85 นาที
 
 ### 📋 Prerequisites
 
@@ -507,6 +508,119 @@ ssh admin@192.168.56.10
 
 ---
 
+## 🧪 LAB 4: ดึงข้อมูลผ่าน LibreNMS API (Optional)
+
+**🎯 วัตถุประสงค์:** เรียนรู้การใช้ LibreNMS API เพื่อดึงข้อมูล monitoring แบบ programmatic
+
+**⏱️ เวลา:** 15-20 นาที
+
+**📖 คู่มือฉบับเต็ม:** [librenms-api/librenms-api.md](librenms-api/librenms-api.md) (มีตัวอย่าง code ครบถ้วน)
+
+### Step 4.1: สร้าง API Token
+
+1. Login เข้า LibreNMS: `http://localhost:8000`
+2. คลิก **Username** (มุมบนขวา) → **My Settings**
+3. เลือกแท็บ **API Settings**
+4. คลิก **Create API Token**
+5. ใส่ Description: `Lab API Token`
+6. คลิก **Create Token**
+7. **Copy token และเก็บไว้!** (จะแสดงครั้งเดียว)
+
+```
+Token: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+```
+
+### Step 4.2: ทดสอบ API ด้วย cURL
+
+```bash
+# ดึงรายการอุปกรณ์ทั้งหมด
+curl -H "X-Auth-Token: YOUR_TOKEN" \
+  http://localhost:8000/api/v0/devices
+```
+
+**Expected Output:**
+```json
+{
+  "status": "ok",
+  "devices": [
+    {
+      "device_id": 1,
+      "hostname": "192.168.56.10",
+      "display": "MikroTik-Lab-Router",
+      "os": "routeros",
+      "status": 1
+    }
+  ]
+}
+```
+
+### Step 4.3: ดึงข้อมูล MikroTik
+
+```bash
+# ดึงข้อมูลอุปกรณ์
+curl -H "X-Auth-Token: YOUR_TOKEN" \
+  http://localhost:8000/api/v0/devices/192.168.56.10
+
+# ดึงข้อมูล ports
+curl -H "X-Auth-Token: YOUR_TOKEN" \
+  http://localhost:8000/api/v0/devices/192.168.56.10/ports
+```
+
+### Step 4.4: ดึงสถานะ ether1 ด้วย Python
+
+สร้างไฟล์ `check_ether1.py`:
+
+```python
+import requests
+import json
+
+API_URL = "http://localhost:8000/api/v0"
+API_TOKEN = "your-token-here"  # เปลี่ยนเป็น token จริง
+
+headers = {"X-Auth-Token": API_TOKEN}
+
+# Get all ports
+response = requests.get(
+    f"{API_URL}/devices/192.168.56.10/ports",
+    headers=headers
+)
+
+ports = response.json()['ports']
+
+# Find ether1
+for port in ports:
+    if port['ifName'] == 'ether1':
+        print(f"Interface: {port['ifName']}")
+        print(f"Status:    {port['ifOperStatus'].upper()}")
+        print(f"Speed:     {port['ifSpeed'] / 1000000} Mbps")
+        break
+```
+
+รันสคริปต์:
+
+```bash
+python3 check_ether1.py
+```
+
+**Output:**
+```
+Interface: ether1
+Status:    UP
+Speed:     1000.0 Mbps
+```
+
+### 🎉 LAB 4 Complete!
+
+คุณได้เรียนรู้การใช้ LibreNMS API แล้ว!
+
+**New Skills Unlocked:**
+- ✅ API authentication with tokens
+- ✅ RESTful API concepts
+- ✅ Programmatic data retrieval
+- ✅ Python API integration
+
+---
+
 ## 🎓 Lab Summary
 
 ### สิ่งที่คุณได้ทำใน Lab นี้
@@ -514,6 +628,7 @@ ssh admin@192.168.56.10
 1. **LAB 1:** ติดตั้ง LibreNMS monitoring system ด้วย Docker Compose (4 containers)
 2. **LAB 2:** สร้าง MikroTik RouterOS VM พร้อม 4 network interfaces และเปิด SNMP
 3. **LAB 3:** เชื่อมต่อและ monitor MikroTik ผ่าน LibreNMS
+4. **LAB 4:** ดึงข้อมูล monitoring ผ่าน API (Optional)
 
 ### Metrics ที่ Monitor ได้
 
@@ -555,6 +670,17 @@ ssh admin@192.168.56.10
 - ➕ Device management
 - 🔍 Troubleshooting (8+ ปัญหา)
 - 🎯 Security best practices
+
+### 🔌 [LibreNMS API - คู่มือฉบับสมบูรณ์](librenms-api/librenms-api.md)
+
+รายละเอียดครบถ้วนเกี่ยวกับ LibreNMS API:
+- 🔑 API Token creation และ management
+- 🔌 Authentication และ connection
+- 📡 API Endpoints reference
+- 💻 ตัวอย่าง code (Python, JavaScript, cURL)
+- 🎯 ดึงข้อมูล MikroTik ผ่าน API
+- ⚠️ Error handling และ best practices
+- 🔒 Security considerations
 
 ---
 
