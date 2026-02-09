@@ -143,6 +143,132 @@ docker exec librenms lnms user:api-token admin delete <token-id>
 
 ---
 
+## 🔒 Security Setup
+
+> ⚠️ **สำคัญ:** ตัวอย่าง code ในคู่มือนี้ออกแบบมาสำหรับ Workshop/การเรียนรู้เท่านั้น
+>
+> **ปัญหาด้านความปลอดภัย:**
+> - API Token อาจถูก hardcode ในโค้ด
+> - ไม่มี HTTPS/SSL encryption
+> - API Token ไม่มีการจำกัดสิทธิ์
+
+### วิธีตั้งค่าที่ปลอดภัย
+
+#### 1. ใช้ Environment Variables
+
+```bash
+# สร้างไฟล์ .env
+cp .env.example .env
+
+# แก้ไขไฟล์ .env
+nano .env
+```
+
+เพิ่มข้อมูล:
+
+```bash
+API_URL=http://localhost:8000/api/v0
+API_TOKEN=<your-secure-api-token>
+DEVICE_IP=192.168.56.10
+```
+
+**ในโค้ด:**
+
+```javascript
+require('dotenv').config();
+
+const API_URL = process.env.API_URL;
+const API_TOKEN = process.env.API_TOKEN;
+
+// ไม่ hardcode!
+```
+
+#### 2. จำกัดสิทธิ์ API Token
+
+เมื่อสร้าง API Token ใน LibreNMS:
+- ใช้ User ที่มีสิทธิ์น้อยที่สุดที่จำเป็น
+- สร้าง User แยกสำหรับ automation/integration
+- ไม่ใช้ admin token สำหรับ application
+
+```bash
+# สร้าง user แยกสำหรับ API
+docker exec librenms lnms user:add api_user -p SecurePassword --role normal
+
+# สร้าง token สำหรับ user นี้
+docker exec librenms lnms user:api-token api_user create
+```
+
+#### 3. ใช้ HTTPS/SSL (สำหรับ Production)
+
+ถ้า LibreNMS อยู่บน Production:
+
+```javascript
+// เปลี่ยนจาก http เป็น https
+const API_URL = "https://your-domain.com/api/v0";
+
+// ถ้าใช้ self-signed certificate
+const https = require('https');
+const agent = new https.Agent({
+    rejectUnauthorized: false  // ใช้เฉพาะ dev เท่านั้น!
+});
+```
+
+#### 4. เพิ่ม Rate Limiting
+
+```javascript
+// ใช้ library เช่น bottleneck
+const Bottleneck = require('bottleneck');
+
+const limiter = new Bottleneck({
+    maxConcurrent: 5,      // max 5 requests พร้อมกัน
+    minTime: 200           // รอ 200ms ระหว่าง request
+});
+
+// Wrap API calls
+const getDevices = limiter.wrap(async () => {
+    return axios.get(`${API_URL}/devices`, { headers });
+});
+```
+
+#### 5. ปกป้อง .env File
+
+```bash
+# ตรวจสอบว่า .env ถูก ignore จาก git
+cat .gitignore | grep .env
+
+# ควรเห็น:
+# .env
+# *.env
+```
+
+**อย่าเผย .env file:**
+- ไม่ commit เข้า git
+- ไม่ส่งผ่าน email/chat
+- ไม่เก็บใน public storage
+
+### ✅ Security Checklist
+
+ก่อนใช้งาน Production:
+
+- [ ] ใช้ `.env` file สำหรับ credentials
+- [ ] เพิ่ม `.env` เข้า `.gitignore`
+- [ ] สร้าง API Token แยกสำหรับแต่ละ application
+- [ ] จำกัดสิทธิ์ API Token ให้น้อยที่สุด
+- [ ] ใช้ HTTPS แทน HTTP
+- [ ] เพิ่ม error handling และ logging
+- [ ] ตั้ง rate limiting
+- [ ] เปลี่ยน API Token เป็นประจำ
+- [ ] Monitor API usage
+
+### 🎓 สำหรับ Workshop
+
+**ไม่ต้องกังวล!** สำหรับการเรียนรู้:
+1. Copy `.env.example` เป็น `.env`
+2. ใส่ API Token ที่สร้างจาก LibreNMS
+3. รันโค้ดตัวอย่างได้เลย
+
+---
+
 ## 🔌 การเชื่อมต่อ API
 
 ### Base URL และ Authentication

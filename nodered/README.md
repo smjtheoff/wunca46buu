@@ -113,6 +113,144 @@ LibreNMS API → Node-RED → MQTT Broker (Aedes) → 3D Platform (ทีมอ�
 
 ---
 
+## 🔒 Security Setup (สำหรับ Production)
+
+> ⚠️ **สำคัญ:** Configuration ที่อยู่ใน `docker-compose.yml` ออกแบบมาสำหรับ Workshop/การเรียนรู้เท่านั้น
+>
+> **ปัญหาด้านความปลอดภัย:**
+> - ไม่มี Authentication สำหรับ Node-RED UI
+> - MQTT Broker ไม่มี username/password
+> - ไม่มี SSL/TLS encryption
+> - Port เปิดให้ทุกคนเข้าถึงได้
+
+### วิธีตั้งค่าที่ปลอดภัย
+
+#### 1. สร้างไฟล์ .env
+
+```bash
+# Copy ไฟล์ตัวอย่าง
+cp .env.example .env
+
+# แก้ไขไฟล์ .env (ถ้าต้องการเปลี่ยน port)
+nano .env
+```
+
+#### 2. ตั้งรหัสผ่านสำหรับ Node-RED UI
+
+```bash
+# เข้าไปใน container
+docker exec -it nodered bash
+
+# สร้าง password hash
+node-red admin hash-pw
+
+# คุณจะได้ hash เช่น: $2b$08$xyz...
+# Copy hash นี้ไว้
+```
+
+แก้ไขไฟล์ `settings.js`:
+
+```bash
+# แก้ไขไฟล์
+docker exec -it nodered vi /data/settings.js
+```
+
+เพิ่มส่วนนี้:
+
+```javascript
+adminAuth: {
+    type: "credentials",
+    users: [{
+        username: "admin",
+        password: "$2b$08$xyz...",  // paste hash ที่ได้
+        permissions: "*"
+    }]
+}
+```
+
+Restart Node-RED:
+
+```bash
+docker restart nodered
+```
+
+#### 3. ตั้งค่า MQTT Authentication
+
+เมื่อสร้าง Aedes broker node ใน Node-RED:
+
+1. เปิด Aedes broker node settings
+2. ไปที่แท็บ **Authenticate**
+3. เพิ่ม Function สำหรับตรวจสอบ username/password:
+
+```javascript
+// Authenticate callback
+function authenticate(client, username, password, callback) {
+    // ตัวอย่างง่ายๆ (ควรใช้ database จริง)
+    const validUsers = {
+        'mqtt_user': 'secure_password_here'
+    };
+
+    const pwd = password.toString();
+    if (validUsers[username] && validUsers[username] === pwd) {
+        callback(null, true);
+    } else {
+        callback(null, false);
+    }
+}
+```
+
+4. Deploy flow
+
+#### 4. เปิดใช้งาน SSL/TLS (แนะนำสำหรับ Production)
+
+สร้าง certificate:
+
+```bash
+openssl req -x509 -newkey rsa:4096 \
+  -keyout key.pem -out cert.pem \
+  -days 365 -nodes
+```
+
+ใน Aedes node settings:
+- เปิด **SSL/TLS**
+- Upload `cert.pem` และ `key.pem`
+- เปลี่ยน port เป็น 8883 (MQTTS)
+
+#### 5. จำกัดการเข้าถึง
+
+แก้ไขใน `.env`:
+
+```bash
+# จำกัดให้เข้าถึงเฉพาะ localhost
+NODERED_PORT=127.0.0.1:1880
+MQTT_PORT=127.0.0.1:1883
+```
+
+หรือใช้ Firewall:
+
+```bash
+# Ubuntu/Debian
+sudo ufw allow from 192.168.56.0/24 to any port 1880
+sudo ufw allow from 192.168.56.0/24 to any port 1883
+```
+
+### ✅ Security Checklist
+
+ก่อนใช้งาน Production ตรวจสอบ:
+
+- [ ] ตั้งรหัสผ่านสำหรับ Node-RED UI
+- [ ] เปิดใช้งาน MQTT authentication
+- [ ] พิจารณาใช้ SSL/TLS สำหรับ MQTT
+- [ ] จำกัดการเข้าถึง port ด้วย Firewall
+- [ ] สำรองข้อมูล flows และ settings
+- [ ] อัปเดต Node-RED และ nodes เป็นเวอร์ชันล่าสุด
+
+### 🎓 สำหรับ Workshop
+
+**ไม่ต้องกังวล!** สำหรับการเรียนรู้ คุณสามารถข้ามขั้นตอนด้านบนและใช้งานได้เลยโดยไม่ต้องตั้ง authentication
+
+---
+
 ## 🚀 ติดตั้ง Node-RED
 
 ### Step 1: เตรียม Environment
