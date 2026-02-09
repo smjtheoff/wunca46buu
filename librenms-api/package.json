@@ -1,0 +1,25 @@
+{
+  "name": "librenms-api-examples",
+  "version": "1.0.0",
+  "description": "LibreNMS API integration examples using Node.js",
+  "main": "check-ether1.js",
+  "scripts": {
+    "check": "node check-ether1.js",
+    "list": "node list-devices.js",
+    "monitor": "node mikrotik-monitor.js",
+    "realtime": "node monitor-realtime.js"
+  },
+  "keywords": [
+    "librenms",
+    "monitoring",
+    "network",
+    "snmp",
+    "api"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.0"
+  }
+}
