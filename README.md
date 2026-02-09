@@ -33,7 +33,8 @@
 - **Lab 2:** 20-30 นาที (Setup MikroTik)
 - **Lab 3:** 10-15 นาที (Integration & Monitoring)
 - **Lab 4:** 15-20 นาที (API Integration - Optional)
-- **รวม:** ~45-85 นาที
+- **Lab 5:** 15-20 นาที (Node-RED + MQTT - Optional)
+- **รวม:** ~45-105 นาที
 
 ### 📋 Prerequisites
 
@@ -621,6 +622,182 @@ Speed:     1000.0 Mbps
 
 ---
 
+## 🧪 LAB 5: Node-RED + MQTT Integration (Optional)
+
+**🎯 วัตถุประสงค์:** ใช้ Node-RED เป็น Flow-based platform ดึงข้อมูลจาก LibreNMS API และส่งต่อผ่าน MQTT
+
+**⏱️ เวลา:** 15-20 นาที
+
+**📖 คู่มือฉบับเต็ม:** [nodered/nodered.md](nodered/nodered.md) (มี advanced flows และ troubleshooting)
+
+### Step 5.1: เตรียม Environment
+
+```bash
+# เข้าโฟลเดอร์ Node-RED
+cd nodered
+
+# สร้าง directories สำหรับ Mosquitto MQTT Broker
+mkdir -p mosquitto/config mosquitto/data mosquitto/log nodered_data
+
+# สร้างไฟล์ config สำหรับ Mosquitto
+cat > mosquitto/config/mosquitto.conf << 'EOF'
+listener 1883
+allow_anonymous true
+listener 9001
+protocol websockets
+persistence true
+persistence_location /mosquitto/data/
+log_dest file /mosquitto/log/mosquitto.log
+EOF
+```
+
+### Step 5.2: เชื่อมต่อ Docker Network
+
+```bash
+# สร้าง network (ถ้ายังไม่มี)
+docker network create monitoring_network
+
+# Connect LibreNMS container เข้า network
+docker network connect monitoring_network librenms
+```
+
+### Step 5.3: Start Node-RED และ MQTT Broker
+
+```bash
+# Start services
+docker-compose up -d
+
+# ตรวจสอบสถานะ
+docker-compose ps
+```
+
+**Expected Output:**
+```
+NAME        STATUS    PORTS
+nodered     Up        0.0.0.0:1880->1880/tcp
+mosquitto   Up        0.0.0.0:1883->1883/tcp, 0.0.0.0:9001->9001/tcp
+```
+
+### Step 5.4: เข้าถึง Node-RED
+
+1. เปิด Web Browser
+2. ไปที่: **http://localhost:1880**
+3. คุณจะเห็น Node-RED Flow Editor
+
+### Step 5.5: Import Flow Example
+
+1. คลิก **Menu (≡)** มุมบนขวา
+2. เลือก **Import**
+3. คลิก **select a file to import**
+4. เลือกไฟล์ `flow-example.json`
+5. คลิก **Import**
+
+**ควรเห็น Flow ที่มี 5 nodes:**
+- 🔵 Inject (Every 1 minute)
+- 🟦 HTTP Request (Get ether1 status)
+- 🟨 Function (Extract ether1 data)
+- 🟪 MQTT Out (Publish to MQTT)
+- 🟩 Debug (Output)
+
+### Step 5.6: แก้ไข API Token
+
+1. **Double-click** ที่ node **"Get ether1 status"** (HTTP Request)
+2. ในส่วน **Headers** → แก้ไข `X-Auth-Token`
+3. ใส่ API Token จาก LAB 4
+4. คลิก **Done**
+
+### Step 5.7: Deploy Flow
+
+1. คลิกปุ่ม **Deploy** มุมบนขวา
+2. รอจนเห็นข้อความ **"Successfully deployed"**
+
+### Step 5.8: ทดสอบ Flow
+
+**วิธีที่ 1: คลิกปุ่มทดสอบ**
+
+1. คลิกที่ปุ่มสีน้ำเงินซ้ายมือของ node **"Every 1 minute"**
+2. ดูใน **Debug** tab ขวามือ
+3. ควรเห็น JSON output พร้อมข้อมูล ether1
+
+**Expected Output:**
+```json
+{
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "interface": "ether1",
+  "status": "up",
+  "adminStatus": "up",
+  "speed": 1000,
+  "mtu": 1500,
+  "macAddress": "XX:XX:XX:XX:XX:XX",
+  "statistics": {
+    "inOctets": 123456,
+    "outOctets": 789012,
+    "inPackets": 1234,
+    "outPackets": 5678,
+    "inErrors": 0,
+    "outErrors": 0
+  }
+}
+```
+
+### Step 5.9: Subscribe to MQTT Messages
+
+เปิด Terminal ใหม่:
+
+```bash
+# Subscribe to MQTT topic
+docker run --rm --network monitoring_network eclipse-mosquitto:2.0 \
+  mosquitto_sub -h mosquitto -t "mikrotik/ether1/status" -v
+```
+
+หรือใช้ mosquitto_sub บนเครื่อง host:
+
+```bash
+mosquitto_sub -h localhost -t "mikrotik/ether1/status" -v
+```
+
+**Expected Output:**
+```
+mikrotik/ether1/status {"timestamp":"2024-01-15T10:30:00.000Z","interface":"ether1","status":"up",...}
+```
+
+### Step 5.10: ทดสอบ Real-time Monitoring
+
+1. Flow จะทำงานอัตโนมัติทุก **1 นาที**
+2. คลิกปุ่มทดสอบอีกครั้ง เพื่อส่งข้อมูลทันที
+3. ดูข้อมูลใน Terminal ที่รัน mosquitto_sub
+
+**✅ ถ้าเห็นข้อมูลใน Terminal = MQTT working!**
+
+### Step 5.11: ดู MQTT Broker Logs (Optional)
+
+```bash
+# ดู Mosquitto logs
+docker-compose logs -f mosquitto
+
+# ควรเห็น connection และ publish messages
+```
+
+### 🎉 LAB 5 Complete!
+
+ยินดีด้วย! คุณได้สร้าง IoT Integration Pipeline แล้ว!
+
+**Achievement Unlocked:**
+- ✅ Node-RED flow-based programming
+- ✅ MQTT broker setup (Mosquitto)
+- ✅ LibreNMS API integration ผ่าน Node-RED
+- ✅ Real-time data streaming via MQTT
+- ✅ IoT-ready monitoring system
+
+**MQTT Topic Structure:**
+```
+mikrotik/ether1/status  → สถานะ ether1
+mikrotik/+/status       → สถานะทุก interface (wildcard)
+mikrotik/#              → ทุก message จาก mikrotik
+```
+
+---
+
 ## 🎓 Lab Summary
 
 ### สิ่งที่คุณได้ทำใน Lab นี้
@@ -629,6 +806,7 @@ Speed:     1000.0 Mbps
 2. **LAB 2:** สร้าง MikroTik RouterOS VM พร้อม 4 network interfaces และเปิด SNMP
 3. **LAB 3:** เชื่อมต่อและ monitor MikroTik ผ่าน LibreNMS
 4. **LAB 4:** ดึงข้อมูล monitoring ผ่าน API (Optional)
+5. **LAB 5:** สร้าง IoT pipeline ด้วย Node-RED + MQTT (Optional)
 
 ### Metrics ที่ Monitor ได้
 
