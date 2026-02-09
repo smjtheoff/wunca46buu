@@ -36,6 +36,11 @@ Thumbs.db
 !mikrotik/
 !mikrotik/*.md
 
+# Allow LibreNMS API documentation
+!librenms-api/
+!librenms-api/*.md
+!librenms-api/*.py
+
 # Allow images
 !picture/
 !picture/*.jpg
