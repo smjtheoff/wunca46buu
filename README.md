@@ -84,7 +84,7 @@ LibreNMS เป็นระบบ Network Monitoring แบบ Open Source ท�
 
 👉 **[อ่านคู่มือเต็มรูปแบบที่นี่](librenms/librenms.md)**
 
-### 🔧 [คู่มือ MikroTik RouterOS Setup (mikrotik.md)](mikrotik.md)
+### 🔧 [คู่มือ MikroTik RouterOS Setup (mikrotik.md)](mikrotik/mikrotik.md)
 
 คู่มือการตั้งค่า MikroTik RouterOS เพื่อใช้งานร่วมกับ LibreNMS:
 
@@ -95,7 +95,7 @@ LibreNMS เป็นระบบ Network Monitoring แบบ Open Source ท�
 - 🔍 **Troubleshooting** - แก้ไขปัญหาที่พบบ่อย
 - 🎯 **Best Practices** - Security และ Performance tips
 
-👉 **[อ่านคู่มือ MikroTik ที่นี่](mikrotik.md)**
+👉 **[อ่านคู่มือ MikroTik ที่นี่](mikrotik/mikrotik.md)**
 
 ---
 
