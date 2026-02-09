@@ -84,6 +84,19 @@ LibreNMS เป็นระบบ Network Monitoring แบบ Open Source ท�
 
 👉 **[อ่านคู่มือเต็มรูปแบบที่นี่](librenms/librenms.md)**
 
+### 🔧 [คู่มือ MikroTik RouterOS Setup (mikrotik.md)](mikrotik.md)
+
+คู่มือการตั้งค่า MikroTik RouterOS เพื่อใช้งานร่วมกับ LibreNMS:
+
+- 📦 **Import OVA** - วิธีนำเข้า RouterOS บน VirtualBox
+- 🌐 **Network Setup** - ตั้งค่า 4 interfaces (Host-Only, NAT, Internal)
+- 🔊 **SNMP Configuration** - เปิดและตั้งค่า SNMP v2c
+- ➕ **Add to LibreNMS** - เพิ่มอุปกรณ์เข้าสู่ระบบ monitoring
+- 🔍 **Troubleshooting** - แก้ไขปัญหาที่พบบ่อย
+- 🎯 **Best Practices** - Security และ Performance tips
+
+👉 **[อ่านคู่มือ MikroTik ที่นี่](mikrotik.md)**
+
 ---
 
 ## ⚡ Quick Start
@@ -156,9 +169,12 @@ docker-compose down
 ```
 wunca46buu/
 ├── README.md                    # ← คุณอยู่ที่นี่
+├── mikrotik.md                 # 🔧 คู่มือ MikroTik RouterOS Setup
+├── picture/
+│   └── wunca46.jpg            # Banner image
 ├── librenms/
 │   ├── docker-compose.yml      # Docker Compose configuration
-│   ├── librenms.md            # 📖 คู่มือฉบับสมบูรณ์
+│   ├── librenms.md            # 📖 คู่มือ LibreNMS ฉบับสมบูรณ์
 │   ├── db/                    # MariaDB data (auto-created)
 │   └── librenms/              # LibreNMS data (auto-created)
 └── .gitignore
